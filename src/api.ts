@@ -8,6 +8,16 @@ export class ApiError extends Error {
     super(`Cloudflare HTTP ${status}`);
   }
 }
+// Only a locally captured HTTP status is safe to expose. Never copy provider
+// response bodies, arbitrary exception messages or credentials into status.
+export function apiFailure(error: unknown): string {
+  return error instanceof ApiError &&
+    Number.isInteger(error.status) &&
+    error.status >= 400 &&
+    error.status <= 599
+    ? `Cloudflare HTTP ${error.status}`
+    : "request/response failed";
+}
 export function bounded(call: Api, deadline: number): Api {
   return <T>(path: string, body?: unknown, method?: string) => {
     if (Date.now() >= deadline)

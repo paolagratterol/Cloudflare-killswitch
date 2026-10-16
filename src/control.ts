@@ -1,4 +1,4 @@
-import { rows, ApiError, type Api } from "./api.ts";
+import { rows, ApiError, apiFailure, type Api } from "./api.ts";
 import type { Config } from "./configuration.ts";
 export const REF = "ferrecar_budget_guard_v1";
 export const scriptPath = (c: Config) =>
@@ -100,8 +100,8 @@ export async function inventory(
   ) => {
     try {
       use(await get());
-    } catch {
-      s.issues.push(`${label} unavailable or invalid`);
+    } catch (error) {
+      s.issues.push(`${label} unavailable or invalid (${apiFailure(error)})`);
     }
   };
   await attempt(

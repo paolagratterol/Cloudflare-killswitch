@@ -193,6 +193,12 @@ no deployment script, GitHub deployment workflow or Codex recurring automation.
 
 ## Status, shutdown and recovery
 
+Inventory/metrics failures include a validated Cloudflare HTTP status when one is
+available. HTTP 401/403 means the runtime token's value, validity or permissions
+need review. Arbitrary exception messages, provider response bodies and credential
+values are never copied into these diagnostics. Resolve access errors in observe
+mode before considering enforcement.
+
 Authenticate admin requests with `Authorization: Bearer <ADMIN_SECRET>`. Avoid
 putting this secret in shell history, screenshots or support messages.
 

@@ -1,4 +1,4 @@
-import { api, bounded, type Api } from "./api.ts";
+import { api, apiFailure, bounded, type Api } from "./api.ts";
 import {
   configuration,
   storedConfiguration,
@@ -174,10 +174,11 @@ export class Engine {
       await save();
       return s;
     }
-    // Inventory every 15 minutes; cutoff enforcement itself checks every minute.
+    // Cache healthy inventory for 15 minutes; retry incomplete inventory next tick.
     if (
       configChanged ||
       !s.snapshot ||
+      s.snapshot.issues.length > 0 ||
       now - Date.parse(s.lastInventory ?? "") >= 900000 ||
       !s.lastInventory ||
       manual
@@ -192,9 +193,9 @@ export class Engine {
       s.cost = this.estimate(m.usage, c, prior);
       s.lastGood = s.lastCheck;
       s.warning = s.cost.microUsd >= c.warning || quotaWarning(s.cost);
-    } catch {
+    } catch (error) {
       s.errors.push(
-        "metrics missing, stale, unsupported, invalid or unavailable",
+        `metrics missing, stale, unsupported, invalid or unavailable (${apiFailure(error)})`,
       );
     }
     if (s.snapshot.issues.length)
