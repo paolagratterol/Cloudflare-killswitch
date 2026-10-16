@@ -11,12 +11,28 @@ export class ApiError extends Error {
 // Only a locally captured HTTP status is safe to expose. Never copy provider
 // response bodies, arbitrary exception messages or credentials into status.
 export function apiFailure(error: unknown): string {
-  return error instanceof ApiError &&
+  if (
+    error instanceof ApiError &&
     Number.isInteger(error.status) &&
     error.status >= 400 &&
     error.status <= 599
-    ? `Cloudflare HTTP ${error.status}`
-    : "request/response failed";
+  )
+    return `Cloudflare HTTP ${error.status}`;
+  const known = new Set([
+    "API configuration",
+    "API token format invalid",
+    "Cloudflare response error",
+    "inventory truncated",
+    "missing API result",
+    "API payload limit",
+    "empty API response",
+    "tick API time budget exhausted",
+  ]);
+  if (error instanceof Error && known.has(error.message)) return error.message;
+  if (error instanceof TypeError) return "fetch/header type error";
+  if (error instanceof Error && error.name === "AbortError")
+    return "API request timed out";
+  return "request/response failed";
 }
 export function bounded(call: Api, deadline: number): Api {
   return <T>(path: string, body?: unknown, method?: string) => {
@@ -32,8 +48,14 @@ export function api(token: string, fetcher: typeof fetch = fetch): Api {
     body?: unknown,
     method = body === undefined ? "GET" : "PUT",
   ): Promise<T> => {
-    if (!token || !path.startsWith("/") || path.includes("://"))
+    if (
+      typeof token !== "string" ||
+      !token ||
+      !path.startsWith("/") ||
+      path.includes("://")
+    )
       throw Error("API configuration");
+    if (/[^\x21-\x7e]/.test(token)) throw Error("API token format invalid");
     for (let attempt = 0; ; attempt++) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 5000);

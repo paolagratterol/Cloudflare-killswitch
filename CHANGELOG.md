@@ -4,7 +4,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
-- Report validated Cloudflare HTTP status codes for inventory/metrics failures without exposing credentials or provider response bodies. Retry incomplete inventory on the next tick so restored access clears stale coverage errors promptly. Observe-mode authentication failures remain unable to invoke control.
+- Validate API-token header formatting and report fixed, redacted failure categories plus Cloudflare HTTP status codes without exposing credentials or provider response bodies. Retry incomplete inventory on the next tick so restored access clears stale coverage errors promptly. Observe-mode authentication failures remain unable to invoke control.
 - Add explicit Workers Free / Paid pricing, UTC-day Free quota warnings, unchanged R2 charges, legacy Paid-state compatibility and plan-change recovery protection. Ship the Free example with zero Workers subscription cost and no Paid CPU-limit setting; keep enforcement disabled.
 - Fix cutoff starvation with separate analytics/shutdown budgets, bounded independent actions, ordered durable snapshots, and manual cutoff that bypasses analytics.
 - Preserve known estimated charges per billing interval; add read-only recovery readiness, original-scope/enforcement checks, strict response/state/settings validation, visible failure statuses, timing-safe authentication and regression tests. Enforcement remains disabled; no deployment.

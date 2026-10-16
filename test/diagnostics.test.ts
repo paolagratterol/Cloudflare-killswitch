@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ApiError, apiFailure, type Api } from "../src/api.ts";
+import { api, ApiError, apiFailure, type Api } from "../src/api.ts";
 import { Engine } from "../src/engine.ts";
 import { Cloud, config, environment, Memory, NOW } from "./helpers.ts";
 
@@ -18,6 +18,33 @@ test("API diagnostics expose only validated HTTP status, never arbitrary secrets
   assert.equal(
     apiFailure({ status: 403, message: "private response body" }),
     "request/response failed",
+  );
+});
+
+test("malformed API token values fail before fetch without exposing the value", async () => {
+  let calls = 0;
+  const fetcher = (async () => {
+    calls++;
+    return Response.json({ success: true, result: [] });
+  }) as typeof fetch;
+  for (const token of [
+    "private-token\n",
+    "Bearer private-token",
+    "private-🔐-token",
+  ]) {
+    await assert.rejects(
+      api(token, fetcher)("/example"),
+      (error) => apiFailure(error) === "API token format invalid",
+    );
+  }
+  assert.equal(calls, 0);
+  assert.equal(
+    apiFailure(new Error("inventory truncated")),
+    "inventory truncated",
+  );
+  assert.equal(
+    apiFailure(new TypeError("private-token")),
+    "fetch/header type error",
   );
 });
 

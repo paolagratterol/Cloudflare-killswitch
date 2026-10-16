@@ -197,7 +197,9 @@ Inventory/metrics failures include a validated Cloudflare HTTP status when one i
 available. HTTP 401/403 means the runtime token's value, validity or permissions
 need review. Arbitrary exception messages, provider response bodies and credential
 values are never copied into these diagnostics. Resolve access errors in observe
-mode before considering enforcement.
+mode before considering enforcement. `API token format invalid` indicates a
+stored value with whitespace or non-ASCII characters; use only the bare API-token
+value, without a `Bearer` prefix, command text or a trailing newline.
 
 Authenticate admin requests with `Authorization: Bearer <ADMIN_SECRET>`. Avoid
 putting this secret in shell history, screenshots or support messages.
