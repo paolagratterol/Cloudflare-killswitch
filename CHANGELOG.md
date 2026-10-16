@@ -4,6 +4,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+- Fix native Workers API requests: workerd rejects `redirect: "error"`, so use supported manual mode and explicitly reject every redirect without forwarding credentials. Add a native-runtime regression using Wrangler's already-locked local runtime.
 - Validate API-token header formatting and report fixed, redacted failure categories plus Cloudflare HTTP status codes without exposing credentials or provider response bodies. Retry incomplete inventory on the next tick so restored access clears stale coverage errors promptly. Observe-mode authentication failures remain unable to invoke control.
 - Add explicit Workers Free / Paid pricing, UTC-day Free quota warnings, unchanged R2 charges, legacy Paid-state compatibility and plan-change recovery protection. Ship the Free example with zero Workers subscription cost and no Paid CPU-limit setting; keep enforcement disabled.
 - Fix cutoff starvation with separate analytics/shutdown budgets, bounded independent actions, ordered durable snapshots, and manual cutoff that bypasses analytics.

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { api, bounded } from "../src/api.ts";
+import { api, ApiError, bounded } from "../src/api.ts";
 const asFetch = (fn: (url: any, init: any) => Promise<Response>) =>
   fn as typeof fetch;
 test("bounded transient retries and no retry of non-idempotent POST", async () => {
@@ -61,7 +61,7 @@ test("redirects forbidden, only Cloudflare API origin, credentials stay in heade
     "test-only",
     asFetch(async (url, init) => {
       assert.equal(url, "https://api.cloudflare.com/client/v4/example");
-      assert.equal(init.redirect, "error");
+      assert.equal(init.redirect, "manual");
       assert.equal(init.headers.Authorization, "Bearer test-only");
       return Response.json({ success: true, result: [] });
     }),
@@ -72,6 +72,24 @@ test("redirects forbidden, only Cloudflare API origin, credentials stay in heade
     bounded(call, Date.now() - 1)("/example"),
     /time budget/,
   );
+  let redirectCalls = 0;
+  const redirect = api(
+    "test-only",
+    asFetch(async (url, init) => {
+      redirectCalls++;
+      assert.equal(url, "https://api.cloudflare.com/client/v4/example");
+      assert.equal(init.redirect, "manual");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "https://untrusted.invalid/" },
+      });
+    }),
+  );
+  await assert.rejects(
+    redirect("/example"),
+    (error) => error instanceof ApiError && error.status === 302,
+  );
+  assert.equal(redirectCalls, 1);
 });
 test("timeout aborts even while waiting for response", async () => {
   const call = api(

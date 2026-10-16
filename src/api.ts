@@ -14,7 +14,7 @@ export function apiFailure(error: unknown): string {
   if (
     error instanceof ApiError &&
     Number.isInteger(error.status) &&
-    error.status >= 400 &&
+    error.status >= 300 &&
     error.status <= 599
   )
     return `Cloudflare HTTP ${error.status}`;
@@ -62,7 +62,9 @@ export function api(token: string, fetcher: typeof fetch = fetch): Api {
       try {
         const r = await fetcher(`https://api.cloudflare.com/client/v4${path}`, {
           method,
-          redirect: "error",
+          // workerd rejects redirect:"error". Manual mode never forwards
+          // credentials; every 3xx is rejected by the non-OK check below.
+          redirect: "manual",
           signal: controller.signal,
           headers: {
             Authorization: `Bearer ${token}`,

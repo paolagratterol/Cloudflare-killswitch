@@ -201,6 +201,10 @@ mode before considering enforcement. `API token format invalid` indicates a
 stored value with whitespace or non-ASCII characters; use only the bare API-token
 value, without a `Bearer` prefix, command text or a trailing newline.
 
+The API client uses `redirect: "manual"` and rejects all non-success statuses,
+including redirects. The native Workers runtime does not implement the browser's
+`redirect: "error"` mode. Credentials are never forwarded to a redirect target.
+
 Authenticate admin requests with `Authorization: Bearer <ADMIN_SECRET>`. Avoid
 putting this secret in shell history, screenshots or support messages.
 
