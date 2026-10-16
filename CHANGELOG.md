@@ -4,6 +4,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+- Clarify that manual guard updates are performed end to end by the assistant when requested; the technical steps are the operator's runbook, with enforcement kept disabled.
 - Document the manual guard-update procedure: review the feature branch, preserve local configuration and persistent state, run the 72-hour dependency/security checks and tests, deploy with enforcement disabled, verify status, and recover a failed update. Keep the application's GitHub connection separate.
 - Fix native Workers API requests: workerd rejects `redirect: "error"`, so use supported manual mode and explicitly reject every redirect without forwarding credentials. Add a native-runtime regression using Wrangler's already-locked local runtime.
 - Validate API-token header formatting and report fixed, redacted failure categories plus Cloudflare HTTP status codes without exposing credentials or provider response bodies. Retry incomplete inventory on the next tick so restored access clears stale coverage errors promptly. Observe-mode authentication failures remain unable to invoke control.

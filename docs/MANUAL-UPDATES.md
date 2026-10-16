@@ -1,5 +1,12 @@
 # Manual guard updates
 
+**This is the operator's runbook, not homework for the user.** Manual means the
+user asks the assistant to update the guard, and the assistant performs the
+review, security checks, tests, deployment and verification. Keep enforcement
+disabled throughout. Do not stop at giving the user these commands. No automatic
+GitHub deployment is connected. Ask for user action only if access or required
+account information is actually unavailable.
+
 The guard runs in the client's Cloudflare account as `ferrecar-budget-guard`.
 Keep enforcement disabled (`CONFIG.enabled: false`) and leave `CONTROL_TOKEN`
 absent. GitHub automatic deployment is not connected. The deployed Worker and
