@@ -1,7 +1,9 @@
 # Customer setup and operation
 
-This is a review candidate. No live Cloudflare API calls, deployment, migration,
-secret reads, or Ferrecar pipeline edits were performed while preparing it.
+This guide covers setup and operation; each client installation needs its own
+live verification record. For the installed observe-only guard and future
+manual updates, follow [Manual guard updates](MANUAL-UPDATES.md). Enforcement
+remains disabled unless separately reviewed and approved.
 Use a customer-owned Cloudflare account, domain, payment method, GitHub access,
 tokens and password manager. Give the customer this repository and recovery
 instructions; remove installer access after handoff.

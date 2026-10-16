@@ -22,6 +22,7 @@ validation and a separate deployment interlock remain prerequisites to approval.
 - [Pricing sources, upstream findings and coverage limits](docs/EVIDENCE.md)
 - [Hook/dependency security review](docs/SECURITY-REVIEW.md)
 - [Configuration with placeholders](wrangler.example.toml)
+- [Manual updates with enforcement disabled](docs/MANUAL-UPDATES.md)
 
 ```sh
 npm ci --ignore-scripts
