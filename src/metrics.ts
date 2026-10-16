@@ -5,10 +5,13 @@ export function query(c: Config, now: number) {
   const w = c.windows;
   const iso = (s: string) => JSON.stringify(new Date(s).toISOString());
   const end = iso(new Date(now).toISOString());
+  const day = new Date(now).toISOString().slice(0, 10);
+  const workersStart = c.plan === "free" ? `${day}T00:00:00Z` : w.workers.start;
+  const rowsStart = c.plan === "free" ? day : w.d1.start.slice(0, 10);
   return `query { viewer { accounts(filter:{accountTag:${JSON.stringify(c.account)}}) {
     heartbeat:workersInvocationsAdaptive(limit:1,orderBy:[datetime_DESC],filter:{scriptName:${JSON.stringify(c.self)},datetime_geq:${iso(new Date(now - 15 * 60000).toISOString())},datetime_lt:${end}}) { dimensions { datetime } }
-    workersInvocationsAdaptive(limit:100,filter:{datetime_geq:${iso(w.workers.start)},datetime_lt:${end}}) { sum { requests } dimensions { scriptName } }
-    d1AnalyticsAdaptiveGroups(limit:2,filter:{date_geq:"${w.d1.start.slice(0, 10)}",date_leq:"${new Date(now).toISOString().slice(0, 10)}"}) { sum { rowsRead rowsWritten } }
+    workersInvocationsAdaptive(limit:100,filter:{datetime_geq:${iso(workersStart)},datetime_lt:${end}}) { sum { requests } dimensions { scriptName } }
+    d1AnalyticsAdaptiveGroups(limit:2,filter:{date_geq:"${rowsStart}",date_leq:"${day}"}) { sum { rowsRead rowsWritten } }
     d1StorageAdaptiveGroups(limit:100,filter:{date_geq:"${w.d1.start.slice(0, 10)}",date_leq:"${new Date(now).toISOString().slice(0, 10)}"}) { max { databaseSizeBytes } dimensions { databaseId } }
     d1Recent:d1StorageAdaptiveGroups(limit:100,filter:{date_geq:"${new Date(now - 86400000).toISOString().slice(0, 10)}",date_leq:"${new Date(now).toISOString().slice(0, 10)}"}) { dimensions { databaseId } }
     r2OperationsAdaptiveGroups(limit:100,filter:{datetime_geq:${iso(w.r2.start)},datetime_lt:${end}}) { sum { requests } dimensions { actionType } }
@@ -62,10 +65,14 @@ export async function metrics(
   const gaps = [
     "Other account products, tax and subscriptions beyond configured fixed charges are not automatically covered.",
     "Adaptive analytics have ingestion delay/sampling; an HTTP success is not a freshness watermark.",
-    "CPU uses a pessimistic invocation ceiling, not measured CPU; guard/DO costs use an unmeasured reserve.",
+    c.plan === "free"
+      ? "Free request/D1 row quota estimates cover the current UTC day; D1 storage is the retained review-window peak (decimal GB). Provider limits can stop the application and this monitor; DO quota use is not measured."
+      : "CPU uses a pessimistic invocation ceiling, not measured CPU; guard/DO costs use an unmeasured reserve.",
+    "Pricing plan is operator-reviewed, not proven by script usage_model; review the guard before any subscription change.",
   ];
   for (const r of rows<Worker>(a.workersInvocationsAdaptive, 100)) {
     if (
+      c.plan !== "free" &&
       r.dimensions.scriptName !== c.self &&
       r.dimensions.scriptName !== c.worker &&
       c.cpuCeilingMs < 1_800_000
@@ -74,7 +81,7 @@ export async function metrics(
     u.requests += count(r.sum.requests);
     // Exclude the guard from application CPU ceiling; reserve its CPU/DO cost.
     // Its requests remain in the shared account allowance.
-    if (r.dimensions.scriptName !== c.self)
+    if (c.plan !== "free" && r.dimensions.scriptName !== c.self)
       u.cpuMs += cpuFromCeiling(r.sum.requests, c.cpuCeilingMs);
   }
   for (const r of rows<{ sum: { rowsRead: number; rowsWritten: number } }>(

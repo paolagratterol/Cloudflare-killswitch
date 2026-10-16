@@ -126,7 +126,7 @@ export async function inventory(
         limits?: { cpu_ms?: number };
         logpush?: boolean;
         tail_consumers?: unknown[];
-        observability?: { enabled?: boolean };
+        observability?: { enabled?: boolean; traces?: { enabled?: boolean } };
         usage_model?: string;
       }>(`${p}/settings`),
     (v) => {
@@ -145,13 +145,22 @@ export async function inventory(
           s.issues.push(
             `unpriced/background binding: ${String(b.type).slice(0, 40)}`,
           );
-      if (v.logpush || v.observability?.enabled || v.tail_consumers?.length)
+      const coveredFreeLogs =
+        c.plan === "free" &&
+        v.observability?.traces?.enabled === false &&
+        Date.parse(c.reviewedUntil) <= Date.parse("2026-12-01T00:00:00Z");
+      if (
+        v.logpush ||
+        (v.observability?.enabled && !coveredFreeLogs) ||
+        v.tail_consumers?.length
+      )
         s.issues.push(
           "logs, traces or tail consumers need separate cost/entrypoint coverage",
         );
       // Below 30 minutes requires a reviewed HTTP-only deployment and observed
       // platform CPU limit (2x margin for documented runtime rollover flexibility).
       if (
+        c.plan !== "free" &&
         c.cpuCeilingMs < 1_800_000 &&
         (!c.httpOnly ||
           s.schedules?.length ||

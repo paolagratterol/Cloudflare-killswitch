@@ -1,5 +1,8 @@
 # Final security and correctness review — 2026-10-16
 
+The subsequent [Free-plan adaptation](FREE-PLAN.md) preserves these cutoff and
+recovery fixes. The current [validation record](VALIDATION.md) covers 70 tests.
+
 Reviewed the feature branch at `733fe01` and fixed the following issues. The
 configuration example still has `enabled=false`. No production configuration,
 application repository, deployment pipeline, default branch or PR was changed.

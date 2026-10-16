@@ -3,6 +3,7 @@ import type { Api } from "../src/api.ts";
 import type { Store } from "../src/engine.ts";
 export const NOW = Date.parse("2026-10-16T18:00:00Z");
 export const config = (): Config => ({
+  plan: "paid",
   account: "a".repeat(32),
   worker: "ferrecar-platform",
   self: "ferrecar-budget-guard",

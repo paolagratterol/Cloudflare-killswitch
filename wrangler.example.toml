@@ -7,9 +7,6 @@ preview_urls = false
 [triggers]
 crons = ["* * * * *"]
 
-[limits]
-cpu_ms = 100
-
 # Errors and warnings are persisted in /status. Review logging cost before
 # enabling persistent provider logs; use an independent authenticated watchdog.
 [observability]
@@ -29,6 +26,7 @@ new_sqlite_classes = ["Guard"]
 # Placeholders deliberately prevent an operational configuration out of the box.
 CONFIG = '''
 {
+  "plan": "free",
   "account": "REPLACE_ACCOUNT_ID",
   "worker": "ferrecar-platform",
   "self": "ferrecar-budget-guard",
@@ -37,7 +35,7 @@ CONFIG = '''
   "enabled": false,
   "warning": 10000000,
   "cutoff": 15000000,
-  "fixed": 5000000,
+  "fixed": 0,
   "reserve": 1000000,
   "cpuCeilingMs": 1800000,
   "httpOnly": false,

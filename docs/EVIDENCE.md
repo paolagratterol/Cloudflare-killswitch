@@ -30,7 +30,7 @@ a coverage requirement, not evidence of its current deployed settings.
 
 All money is integer micro-US dollars (1 USD = 1,000,000). Integer BigInt
 intermediates and upward rounding avoid arithmetic undercount. These are public
-standard paid-plan rates; Enterprise/legacy models and custom contracts are
+standard paid-plan rates when `plan: "paid"`; Enterprise/legacy models and custom contracts are
 unsupported.
 
 | Dimension           | Shared account inclusion | Overage                                |
@@ -47,7 +47,11 @@ unsupported.
 Sources: [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/),
 [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/),
 [R2 pricing and operation definitions](https://developers.cloudflare.com/r2/pricing/).
-The fixed charge configuration includes at least the full $5 Workers subscription.
+On Paid, fixed charges include at least the full $5 Workers subscription. On
+Free, this subscription and Workers/D1 overage charges are zero; R2 rates are
+unchanged. Free request/row quotas use the UTC day, with warnings at 80% and
+provider errors at hard limits. This is an availability signal, not a bill.
+See [Free plan implementation and evidence](FREE-PLAN.md).
 The provisional warning is $10 and cutoff is $15 **including** fixed charges and
 reserve; neither is a guaranteed safe limit. R2 IA/retrieval, Images, KV, logs,
 Queues, Workflows, AI, other subscriptions and taxes need explicit review. The
@@ -59,7 +63,7 @@ Guard requests remain in the shared request count. Guard Worker CPU and Durable
 Object request/duration/SQLite storage overhead are reserved separately (at least
 $1 configured), not measured or guaranteed capped. See [DO pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/).
 
-CPU = non-guard account invocations * configured `cpuCeilingMs`, in **milliseconds**.
+On Paid, CPU = non-guard account invocations * configured `cpuCeilingMs`, in **milliseconds**.
 No CPU percentile is multiplied by requests and presented as a CPU sum. The
 default 1,800,000 ms allows 2x the documented 15-minute maximum background CPU,
 and often overestimates severely. A lower HTTP-only ceiling requires independent

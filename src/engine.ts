@@ -12,7 +12,12 @@ import {
   validateSnapshot,
   type Snapshot,
 } from "./control.ts";
-import { estimate, retainEstimate, validateEstimate } from "./cost.ts";
+import {
+  estimate,
+  retainEstimate,
+  validateEstimate,
+  quotaWarning,
+} from "./cost.ts";
 import { metrics } from "./metrics.ts";
 export interface State {
   version: 1;
@@ -131,6 +136,8 @@ export class Engine {
     let c: Config;
     try {
       c = configuration(this.env, now);
+      if (s.config && c.plan !== s.config.plan)
+        throw Error("pricing-plan migration requires a separate state review");
     } catch (e) {
       s.errors = [`configuration: ${(e as Error).message}`];
       // A previously armed, valid scope remains available for fail-closed action.
@@ -184,7 +191,7 @@ export class Engine {
       s.gaps.push(...m.gaps);
       s.cost = this.estimate(m.usage, c, prior);
       s.lastGood = s.lastCheck;
-      s.warning = s.cost.microUsd >= c.warning;
+      s.warning = s.cost.microUsd >= c.warning || quotaWarning(s.cost);
     } catch {
       s.errors.push(
         "metrics missing, stale, unsupported, invalid or unavailable",
@@ -245,7 +252,7 @@ export class Engine {
       snapshot: live,
       lastCheck: new Date(now).toISOString(),
       lastGood: new Date(now).toISOString(),
-      warning: false,
+      warning: quotaWarning(cost),
       lastInventory: new Date(now).toISOString(),
       cost,
       gaps: m.gaps,
@@ -266,6 +273,7 @@ export class Engine {
       throw Error("cutoff timestamp confirmation required");
     if (
       !c.enabled ||
+      c.plan !== s.config.plan ||
       c.account !== s.config.account ||
       c.worker !== s.config.worker ||
       c.self !== s.config.self ||
@@ -307,7 +315,7 @@ export class Engine {
         JSON.stringify(c.windows[p]) ===
         JSON.stringify(prior.config?.windows[p]);
     return retainEstimate(
-      estimate(usage, c.fixed, c.reserve),
+      estimate(usage, c.fixed, c.reserve, c.plan),
       prior.cost,
       same,
     );

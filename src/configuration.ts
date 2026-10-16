@@ -1,4 +1,6 @@
+export type Plan = "free" | "paid";
 export interface Config {
+  plan: Plan;
   account: string;
   worker: string;
   self: string;
@@ -28,7 +30,11 @@ function validate(value: unknown, now?: number): Config {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw Error("config shape");
   const c = value as Config;
+  // Old deployed configurations and saved cutoff records used Paid pricing.
+  // Never silently reinterpret those records as Free during an upgrade.
+  if (c.plan === undefined) c.plan = "paid";
   const keys = new Set([
+    "plan",
     "account",
     "worker",
     "self",
@@ -81,10 +87,11 @@ function validate(value: unknown, now?: number): Config {
   ] as const)
     if (!Number.isSafeInteger(c[k]) || c[k] < 0) throw Error(`config ${k}`);
   if (
+    !["free", "paid"].includes(c.plan) ||
     typeof c.enabled !== "boolean" ||
     typeof c.httpOnly !== "boolean" ||
     c.warning >= c.cutoff ||
-    c.fixed < 5_000_000 ||
+    (c.plan === "paid" && c.fixed < 5_000_000) ||
     c.reserve < 1_000_000 ||
     c.cpuCeilingMs < 1 ||
     c.cpuCeilingMs > 1_800_000
@@ -116,7 +123,9 @@ function validate(value: unknown, now?: number): Config {
       end: new Date(b).toISOString(),
     };
   }
-  if (!Array.isArray(c.zones) || c.zones.length > 3)
+  // Free allows 50 external subrequests. Two zones bound even full REST retries
+  // plus preflight and cutoff to 41 fetches in one invocation.
+  if (!Array.isArray(c.zones) || c.zones.length > (c.plan === "free" ? 2 : 3))
     throw Error("config zones");
   const ids = new Set<string>(),
     hosts = new Set<string>();

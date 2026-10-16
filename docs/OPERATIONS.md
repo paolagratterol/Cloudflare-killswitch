@@ -6,6 +6,23 @@ Use a customer-owned Cloudflare account, domain, payment method, GitHub access,
 tokens and password manager. Give the customer this repository and recovery
 instructions; remove installer access after handoff.
 
+## Choose the actual Workers plan
+
+The shipped example uses `"plan": "free"`, `"fixed": 0` and disabled enforcement.
+Read [Free plan behavior and limits](FREE-PLAN.md). R2 is still metered on this
+plan. Free has daily service limits rather than Workers/D1 overage charges.
+For a customer already subscribed to Workers Paid, explicitly select `"paid"`
+and include at least $5 in `fixed`. Omitted `plan` retains the old Paid meaning
+for compatibility; it never implicitly selects Free. The example omits a Paid
+`limits.cpu_ms` override, and Free does not require a configurable app CPU cap.
+
+Confirm the plan in Billing > Subscriptions. Script `usage_model: standard`
+does not establish that the account is subscribed to Paid. Runtime tokens do
+not gain Billing Read; subscription changes require a separate guard review.
+Changing `plan` on an existing saved guard state is refused, including recovery,
+so changing a label cannot discard known charges. Request a reviewed state
+migration for a future subscription change; do not delete the Durable Object.
+
 ## Scope and live inventory required before enforcement
 
 Record the account ID; actual Worker name; all D1 database IDs; all R2 buckets and
@@ -16,7 +33,9 @@ Do not obtain secret values from Ferrecar's GitHub repository for this task.
 
 The reference source has an Images binding. Images is **unpriced here**. Resolve
 its cost coverage separately before turning on enforcement. Unknown bindings,
-logging, tail consumers and enabled custom-domain previews fail coverage checks.
+paid logging, traces, tail consumers and enabled custom-domain previews fail coverage checks.
+Ordinary Workers Logs on Free are covered only with traces explicitly disabled
+and a review expiry no later than December 1, 2026, when announced repricing starts.
 Do not remove existing Ferrecar features just to satisfy this guard.
 
 Also inspect the customer dashboard for incoming service bindings, Queue
@@ -103,7 +122,9 @@ no deployment script, GitHub deployment workflow or Codex recurring automation.
    All monetary values are integer **micro-US dollars**: $10 = 10,000,000.
    Configure your verified subscription intervals as exact UTC start/end
    timestamps. The intervals need not be calendar months or identical between
-   subscriptions. They must contain the current time and span no more than 31
+   subscriptions. On Free, Workers/D1 windows are reviewed retention intervals
+   for saved estimates and may match the R2 period; their quota queries use the
+   current UTC day independently. Every window must contain now and span no more than 31
    days. Review/update them monthly; expired config cuts off a previously armed
    scope instead of guessing a new period or reactivating production.
 2. Reserve an available custom-rule slot in each zone. Ensure a zone entrypoint
@@ -118,10 +139,11 @@ no deployment script, GitHub deployment workflow or Codex recurring automation.
    preview routing. WAF exact-host rules do not cover arbitrary preview aliases.
 4. Complete the background/product review above. Configure storage floors at
    least as high as retained peak account storage known from billing. `fixed`
-   includes the full $5 Workers subscription plus all other known fixed charges.
+   includes all known fixed charges, including the full $5 Workers subscription
+   only on Paid. Zero is allowed on Free when no other fixed charges apply.
    `reserve` is at least $1 for monitor/DO overhead, uncertainty and tax; increase
    after measurement. It is an assumption, not an enforced upper bound.
-5. The default `cpuCeilingMs=1800000` is twice the documented 15-minute background
+5. **Paid only:** the default `cpuCeilingMs=1800000` is twice the documented 15-minute background
    CPU maximum. It is intentionally harsh: at roughly 267 app invocations,
    the $5 base + $1 reserve + CPU envelope already crosses $15. For practical
    traffic, independently establish a lower Ferrecar CPU limit and absence of
@@ -131,6 +153,9 @@ no deployment script, GitHub deployment workflow or Codex recurring automation.
    the ceiling below the highest applicable limit used since period start.
    Other historical Workers in analytics prevent use of this lower mode.
    Any Ferrecar CPU-limit or pipeline changes require separate approval.
+   Free ignores this estimate-only CPU setting; its Workers CPU time has a hard
+   provider limit and no overage price. Free permits at most two configured zones
+   to stay below its external subrequest limit even with full transient retries.
 6. With customer installer credentials, store runtime values through interactive
    Wrangler secret prompts; do not paste credentials into shell command lines:
 
@@ -162,6 +187,9 @@ no deployment script, GitHub deployment workflow or Codex recurring automation.
    An HTTP 200 can still include a warning/coverage limits: inspect `warning`,
    `gaps`, `reason`, `cost`, `lastGood` and `heartbeatStale`. Never treat
    `enabled=false` as protection. No watcher was installed as part of this work.
+   On Free, inspect `cost.freeQuota`: requests and D1 rows cover the UTC day,
+   storage is a conservative retained peak. At 80% a quota advisory sets `warning`
+   without triggering a budget cutoff. DO/log quota usage is not measured.
 
 ## Status, shutdown and recovery
 
