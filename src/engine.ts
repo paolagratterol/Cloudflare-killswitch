@@ -10,6 +10,7 @@ import {
   enforce,
   restored,
   validateSnapshot,
+  FREE_LOGS_PRICING_CHANGE,
   type Snapshot,
 } from "./control.ts";
 import {
@@ -122,6 +123,7 @@ export class Engine {
         bounded(this.read, Date.now() + 15_000),
         s.config,
         true,
+        now,
       );
       s.lastInventory = s.lastCheck;
       s.gaps = [
@@ -181,9 +183,11 @@ export class Engine {
       s.snapshot.issues.length > 0 ||
       now - Date.parse(s.lastInventory ?? "") >= 900000 ||
       !s.lastInventory ||
+      (now >= FREE_LOGS_PRICING_CHANGE &&
+        Date.parse(s.lastInventory) < FREE_LOGS_PRICING_CHANGE) ||
       manual
     ) {
-      s.snapshot = await inventory(read, c);
+      s.snapshot = await inventory(read, c, false, now);
       s.lastInventory = s.lastCheck;
     }
     s.gaps = [...s.snapshot.issues];
@@ -287,7 +291,7 @@ export class Engine {
     if (c.httpOnly && s.snapshot.schedules.length)
       throw Error("restored cron violates HTTP-only CPU policy");
     const read = bounded(this.read, Date.now() + 15_000);
-    const live = await inventory(read, c, true);
+    const live = await inventory(read, c, true, now);
     if (live.issues.length) throw Error("coverage unresolved");
     const m = await metrics(read, c, now),
       cost = this.estimate(m.usage, c, s);

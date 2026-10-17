@@ -1,6 +1,8 @@
 import { rows, ApiError, apiFailure, type Api } from "./api.ts";
 import type { Config } from "./configuration.ts";
 export const REF = "ferrecar_budget_guard_v1";
+// A known pricing boundary is independent of an optional operator review date.
+export const FREE_LOGS_PRICING_CHANGE = Date.parse("2026-12-01T00:00:00Z");
 export const scriptPath = (c: Config) =>
   `/accounts/${c.account}/workers/scripts/${c.worker}`;
 export const expression = (hosts: string[]) =>
@@ -89,6 +91,7 @@ export async function inventory(
   read: Api,
   c: Config,
   cutoffExpected = false,
+  now = Date.now(),
 ): Promise<Snapshot> {
   const p = scriptPath(c);
   const s: Snapshot = { routes: [], domains: [], issues: [] };
@@ -148,7 +151,7 @@ export async function inventory(
       const coveredFreeLogs =
         c.plan === "free" &&
         v.observability?.traces?.enabled === false &&
-        Date.parse(c.reviewedUntil) <= Date.parse("2026-12-01T00:00:00Z");
+        now < FREE_LOGS_PRICING_CHANGE;
       if (
         v.logpush ||
         (v.observability?.enabled && !coveredFreeLogs) ||

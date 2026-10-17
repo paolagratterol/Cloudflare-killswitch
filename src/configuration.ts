@@ -14,7 +14,8 @@ export interface Config {
   windows: Record<"workers" | "d1" | "r2", { start: string; end: string }>;
   zones: { id: string; hosts: string[] }[];
   cpuCeilingMs: number;
-  reviewedUntil: string;
+  // Explicit null opts out of scheduled review expiry; omission is invalid.
+  reviewedUntil: string | null;
   httpOnly: boolean;
   d1StorageFloor: number;
   r2StorageFloor: number;
@@ -98,9 +99,10 @@ function validate(value: unknown, now?: number): Config {
   )
     throw Error("config policy");
   if (
-    !Number.isFinite(Date.parse(c.reviewedUntil)) ||
-    typeof c.reviewedUntil !== "string" ||
-    (now !== undefined && Date.parse(c.reviewedUntil) <= now)
+    c.reviewedUntil !== null &&
+    (typeof c.reviewedUntil !== "string" ||
+      !Number.isFinite(Date.parse(c.reviewedUntil)) ||
+      (now !== undefined && Date.parse(c.reviewedUntil) <= now))
   )
     throw Error("coverage review expired");
   for (const name of ["workers", "d1", "r2"] as const) {

@@ -23,6 +23,8 @@ new_sqlite_classes = ["Guard"]
 [vars]
 # Micro-US dollars; 1 USD = 1_000_000. All real identifiers stay in local config.
 # Exact UTC billing windows come from the customer's subscription, not guesses.
+# reviewedUntil requires a UTC expiry or explicit null for no scheduled review
+# expiry. Null never disables budget/monitor cutoff or billing-window validation.
 # Placeholders deliberately prevent an operational configuration out of the box.
 CONFIG = '''
 {

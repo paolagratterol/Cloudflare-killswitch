@@ -315,10 +315,11 @@ test("Free scope stays within its external subrequest allowance under retries", 
   );
 });
 
-test("Free includes ordinary Workers Logs only with traces disabled and review before repricing", async () => {
+test("Free includes ordinary Workers Logs only with traces disabled and before actual repricing", async () => {
   const c = free(),
     cloud = new Cloud();
-  const check = async (traces: unknown) => {
+  c.reviewedUntil = null;
+  const check = async (traces: unknown, now = NOW) => {
     const read: Api = async <T>(p: string, b?: unknown, m?: string) =>
       p.endsWith("/settings")
         ? ({
@@ -327,15 +328,16 @@ test("Free includes ordinary Workers Logs only with traces disabled and review b
             observability: { enabled: true, traces },
           } as T)
         : cloud.call<T>(p, b, m);
-    return (await inventory(read, c)).issues;
+    return (await inventory(read, c, false, now)).issues;
   };
   assert.deepEqual(await check({ enabled: false }), []);
   assert.ok(
     (await check({ enabled: true })).some((s) => s.includes("logs, traces")),
   );
   assert.ok((await check(undefined)).some((s) => s.includes("logs, traces")));
-  c.reviewedUntil = "2026-12-02T00:00:00Z";
   assert.ok(
-    (await check({ enabled: false })).some((s) => s.includes("logs, traces")),
+    (await check({ enabled: false }, Date.parse("2026-12-01T00:00:00Z"))).some(
+      (s) => s.includes("logs, traces"),
+    ),
   );
 });

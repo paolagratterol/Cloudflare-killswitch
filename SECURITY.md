@@ -20,6 +20,13 @@ snapshots untracked. Failed credentials, unavailable state, provider outages,
 sampling and missing coverage can prevent cutoff. Independent monitoring and a
 manual recovery plan are necessary; a same-account monitor cannot be independent.
 
+`reviewedUntil: null` explicitly removes a scheduled operator-review expiry.
+It does not disable budget cutoff, monitor-failure cutoff, strict billing-window
+validation, known pricing-boundary checks, retained cost floors or the durable
+cutoff latch. Finite review dates retain their fail-closed behavior. The current
+client configuration opts out of weekly review renewal; token and billing-window
+expiry remain separate maintenance requirements.
+
 See docs/SECURITY-REVIEW.md for hook, test entrypoint, integrity, release-age,
 registry-signature/provenance and dependency audit evidence. These checks cannot
 prove absence of malicious code. Review all dependency and script changes before

@@ -68,8 +68,9 @@ Wrangler dry run below is required for the real client configuration.
    `ferrecar-budget-guard`, the monitored Worker equal to `ferrecar-platform`,
    `plan: "free"` while that is the client's actual plan, and `enabled: true` for
    this approved production installation. Do not switch it off during an update.
-   Confirm actual billing windows and the review expiry; do not guess dates or
-   extend them without reviewing coverage. This installation's TOML stores
+   Confirm actual billing windows and preserve `reviewedUntil: null` for this
+   installation (no scheduled review expiry). Do not reintroduce the historical
+   October 22 deadline or guess billing boundaries. This installation's TOML stores
    `CONFIG` as a triple-single-quoted JSON string. This check refuses missing,
    malformed, expired or unexpectedly disabled configuration without printing client values:
 
@@ -155,11 +156,15 @@ enforcement mode and any recorded cutoff latch.
 
 ## Ongoing maintenance
 
-Even with rare code updates, review actual billing windows, plan, products,
-entrypoints and token validity before their configured expiry. A configuration
-expiry fails closed: an armed guard stops the application rather than guessing
-coverage. The current review expires October 22, 2026 at 8 PM Caracas
-(`2026-10-23T00:00:00Z`). A GitHub connection would not renew it. Read-only tokens
+The client installation explicitly uses `reviewedUntil: null`: there is no weekly
+review deadline. Budget and monitor-failure cutoff remain enabled. An optional
+finite review timestamp still fails closed when it expires; do not add one for
+routine updates. This change does not automatically renew billing intervals or
+credentials. The current token validity ends November 15, 2026 and the verified
+billing intervals end November 16, 2026 at 00:00 UTC. Review these separately
+before expiry, and review plan/products/entrypoints when they change. The known
+December 1 log-pricing change still fails coverage if logging remains unpriced.
+A GitHub connection would not renew these. Read-only tokens
 are replaced privately under the same approved permissions and installed only
 as encrypted `ANALYTICS_TOKEN`. Do not recreate `ADMIN_SECRET` for ordinary code
 updates. The control token is an expiring **Individual Workers Editor** token

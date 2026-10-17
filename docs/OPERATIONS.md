@@ -1,9 +1,9 @@
 # Customer setup and operation
 
 This guide covers setup and operation; each client installation needs its own
-live verification record. For the installed observe-only guard and future
-manual updates, follow [Manual guard updates](MANUAL-UPDATES.md). Enforcement
-remains disabled unless separately reviewed and approved.
+live verification record. For the installed production guard and future
+manual updates, follow [Manual guard updates](MANUAL-UPDATES.md). Its approved
+enforcement remains enabled; the generic fresh-install example is disabled.
 Use a customer-owned Cloudflare account, domain, payment method, GitHub access,
 tokens and password manager. Give the customer this repository and recovery
 instructions; remove installer access after handoff.
@@ -37,7 +37,9 @@ The reference source has an Images binding. Images is **unpriced here**. Resolve
 its cost coverage separately before turning on enforcement. Unknown bindings,
 paid logging, traces, tail consumers and enabled custom-domain previews fail coverage checks.
 Ordinary Workers Logs on Free are covered only with traces explicitly disabled
-and a review expiry no later than December 1, 2026, when announced repricing starts.
+and while the current time is before December 1, 2026, when announced repricing
+starts. That known pricing boundary forces a new inventory check even if its
+15-minute cache is fresh, independently of the optional review expiry.
 Do not remove existing Ferrecar features just to satisfy this guard.
 
 Also inspect the customer dashboard for incoming service bindings, Queue
@@ -47,9 +49,14 @@ public R2 domains, S3/API clients, presigned URLs, lifecycle transitions, multip
 uploads, and external scheduled jobs. Review routes in **every** zone, including
 zones not listed in this configuration. This implementation does not discover
 all of these from Worker settings. An absent binding does not establish absence
-of an incoming trigger. Record the completed review and set `reviewedUntil` to
-its expiry; expire it no later than the next billing boundary. It is an operator
-attestation, not machine proof. Keep a dedicated Ferrecar account if feasible.
+of an incoming trigger. Record the completed review. `reviewedUntil` is a required
+property: a UTC timestamp opts into a scheduled review cutoff; explicit `null`
+means no scheduled review expiry. Omitted, malformed and elapsed timestamps fail
+validation. The installed client configuration uses `null`, so it needs no weekly
+review renewal. This setting never disables budget or monitor-failure cutoff,
+changes verified billing windows, resets known charges, releases an existing
+cutoff, or extends API-token validity. Review pricing, plan, products and
+entrypoints when they change. Keep a dedicated Ferrecar account if feasible.
 
 Use only hostnames dedicated entirely to Ferrecar: cutoff blocks all paths on
 each listed hostname. A shared hostname with unrelated routes/origins is outside
