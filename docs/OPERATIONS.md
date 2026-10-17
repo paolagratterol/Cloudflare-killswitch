@@ -63,22 +63,23 @@ permission to **this one account**, and each zone permission to **only the liste
 Ferrecar zones**, never all accounts/zones. The names below are the API permission
 names; the dashboard may label Write as Edit.
 
-| Token             | Required permission                | Calls                                                                                           |
-| ----------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `ANALYTICS_TOKEN` | Account Analytics Read             | GraphQL usage and canary datasets                                                               |
-| `ANALYTICS_TOKEN` | Workers Scripts Read, one account  | Worker settings, subdomain, schedules and domain inventory                                      |
-| `ANALYTICS_TOKEN` | Workers Routes Read, listed zones  | Route inventory                                                                                 |
-| `ANALYTICS_TOKEN` | Zone WAF Read, listed zones        | Manual-recovery verification                                                                    |
-| `CONTROL_TOKEN`   | Workers Scripts Write, one account | Disable target workers.dev/previews and replace its cron list with `[]`; reads for verification |
-| `CONTROL_TOKEN`   | Zone WAF Write, listed zones       | Read, add/update and verify this guard's exact-host block rule                                  |
+| Token             | Required permission                           | Calls                                                                                           |
+| ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `ANALYTICS_TOKEN` | Account Analytics Read                        | GraphQL usage and canary datasets                                                               |
+| `ANALYTICS_TOKEN` | Workers Scripts Read, one account             | Worker settings, subdomain, schedules and domain inventory                                      |
+| `ANALYTICS_TOKEN` | Workers Routes Read, listed zones             | Route inventory                                                                                 |
+| `ANALYTICS_TOKEN` | Zone WAF Read, listed zones                   | Manual-recovery verification                                                                    |
+| `CONTROL_TOKEN`   | Individual Workers Editor, target Worker only | Disable target workers.dev/previews and replace its cron list with `[]`; reads for verification |
+| `CONTROL_TOKEN`   | Zone WAF Write, listed zones                  | Read, add/update and verify this guard's exact-host block rule                                  |
 
-Workers Scripts Write can affect other scripts in that account at the token
-permission level even though this code addresses only `ferrecar-platform`.
-These legacy REST endpoints do not provide a per-script resource selector for
-the classic account-scoped token. Do not describe this credential as
-provider-enforced per-Worker isolation. Individual-Worker roles exist in the API;
-the domain listing still requires account-level read. Use a dedicated account
-when stronger practical isolation is needed. Do not grant Account Admin.
+Use the modern account-owned token builder: **Specified Workers →
+ferrecar-platform → Individual Workers Editor**. The installed token's scope was
+verified by successful target access and denied access to the guard, D1 and R2
+APIs. Editor can also update code/settings for this Worker; no narrower
+cutoff-only role is available here. It cannot create/delete Workers. Legacy
+account-scoped Workers Scripts Write is broader and is not the installed scope.
+The separate analytics token retains account-level read for domain inventory.
+Do not grant Account Admin or add D1/R2 permissions to the controller.
 
 No D1 write, D1 query, R2 object read/write/delete, DNS edit, Workers Routes Write,
 Queues Write, Workflows Write, Billing Read or account-wide WAF permissions are
@@ -93,8 +94,10 @@ Permission references: [Analytics authentication](https://developers.cloudflare.
 [route listing](https://developers.cloudflare.com/api/resources/workers/subresources/routes/methods/list/),
 [domain listing](https://developers.cloudflare.com/api/resources/workers/subresources/domains/methods/list/),
 [custom rules API](https://developers.cloudflare.com/waf/custom-rules/create-api/).
-Validate these permissions in a disposable customer test environment; live token
-permissions and account-specific GraphQL schema access have not been tested.
+Validate each installation's actual permissions and queries. The current client
+installation has verified the Worker-specific scope, real analytics, live cutoff,
+scheduled recheck and recovery; see its private installation records. Re-test
+after material scope or permission changes.
 
 ## Local verification
 

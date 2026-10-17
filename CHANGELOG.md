@@ -4,6 +4,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+- Record the approved production enforcement setup after a successful live cutoff, scheduled latch recheck and recovery. Document the verified Individual Workers Editor token scoped only to Ferrecar Platform; manual updates preserve enabled enforcement and encrypted secrets.
 - Clarify that manual guard updates are performed end to end by the assistant when requested; the technical steps are the operator's runbook, with enforcement kept disabled.
 - Document the manual guard-update procedure: review the feature branch, preserve local configuration and persistent state, run the 72-hour dependency/security checks and tests, deploy with enforcement disabled, verify status, and recover a failed update. Keep the application's GitHub connection separate.
 - Fix native Workers API requests: workerd rejects `redirect: "error"`, so use supported manual mode and explicitly reject every redirect without forwarding credentials. Add a native-runtime regression using Wrangler's already-locked local runtime.
